@@ -1,0 +1,31 @@
+<!-- Inspiration taken from: http://codepen.io/maggiben/pen/KwdeaM -->
+{% extends "scripts.html" %}
+{% block body%}
+<body>
+
+    <div class="img-container">
+        <img src="{{url_for('static',filename='images/emojis.jpg')}}" class="bgimg">
+        <div class="inner-container">
+            <div class="box">
+              <h1> React to YouTube videos!</h1>
+                <!--Google Sign in-->
+                <div class="g-signin2" data-onsuccess="onSignIn"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+       function onSignIn(googleUser) {
+             <!--on sign in send token id to server-->
+             var id_token = googleUser.getAuthResponse().id_token;
+             var xhr = new XMLHttpRequest();
+             xhr.open('POST', 'http://localhost:8081/login');
+             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+             xhr.onload = function() {
+                window.location = xhr.responseText;
+};
+             xhr.send('idtoken=' + id_token);
+         }
+    </script>
+</body>
+{% endblock %}

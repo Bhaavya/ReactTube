@@ -1,0 +1,125 @@
+{% extends "scripts.html" %}
+{% block body%}
+<body>
+<!--Search bar -->
+<div class="navbar-fixed">
+    <nav>
+        <div class="nav-wrapper">
+            <div class="left hide-on-med-and-down">
+                <ul>
+            <li>
+                <ul id="search"> </ul>
+
+                </li>
+                  <li> <a href="#"> <i class="material-icons" id="searchButton">search</i> </a>
+                </li>
+                     <li>
+                    <input value="Cute" id="Cute" type="button" class="addIt">
+                </li>
+                <li>
+                    <input value="Funny" id="Funny" type="button" class="addIt">
+                </li>
+                <li>
+                    <input value="Popular" id="Popular" type="button" class="addIt">
+                <li>
+                </ul>
+            </div>
+
+</div>
+    </nav>
+    </div>
+<div class="videoSpace" id="vs">
+</div>
+<script>
+$(function () {
+$('#search').tagit({singleField:true})
+ $('#vs').on('click', '.votes',function(e) {
+               e.stopImmediatePropagation();
+               e.preventDefault();
+               var prev_votes = $(this).data("value")
+               var xhr = new XMLHttpRequest();
+               xhr.open('POST', 'http://localhost:8081/update_votes');
+               xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+               xhr.onload = function() {
+                var result = xhr.responseText;
+                updateVotes(result);
+             };
+               xhr.send('videoId='+prev_votes["videoId"]+'&type='+prev_votes["type"]);
+
+
+    });
+
+$(".addIt").click(function () {
+        $('#search').tagit('add', this.id);
+        return false;
+    });
+
+$("#searchButton").click(function () {
+             $('.collapsible').remove();
+             tags = $("#search").tagit("tags")
+             var query = "";
+             for (var i in tags)
+                query += tags[i].value + ",";
+             query = query.slice(0,-1);
+             var xhr = new XMLHttpRequest();
+             xhr.open('POST', 'http://localhost:8081/search');
+             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+             xhr.onload = function() {
+                var result = xhr.responseText;
+                showVideos(result);
+             };
+             xhr.send('query=' + query);
+              });
+
+function showVideos(result){
+           var collapsible =  '<ul class="collapsible" data-collapsible="accordion" style="{padding: 10px}">'
+           jsonResult = JSON.parse(result)
+           videos = jsonResult["result"]
+            for (var num in videos){
+                jsonVideo = videos[num]
+                funny_votes = jsonVideo["lol"]
+                cute_votes = jsonVideo["aww"]
+                popular_votes = jsonVideo["yass"]
+                description = jsonVideo["description"]
+                vid_id = jsonVideo["id"]
+                var link = "https://www.youtube.com/embed/"+vid_id
+                var prev_funny_votes = JSON.stringify({"videoId": vid_id ,"type":"funny"})
+                var prev_cute_votes = JSON.stringify({"videoId":vid_id,"type":"cute"})
+                var prev_pop_votes = JSON.stringify({"videoId":vid_id,"type":"good"})
+                collapsible += '<li> <div class="collapsible-header">'+jsonVideo["title"] +'\
+                <a href="#" class="btn-floating yellow" style="float:right;padding:3px;"  >\
+                <i class="em em-joy votes" data-value ='+prev_funny_votes+'></i></a>\
+                <span class="badge" id='+vid_id+'lol>' +funny_votes+'</span>\
+                <a class="btn-floating yellow" style="float:right;padding:3px;">\
+                <i class="em em-dog votes"  data-value ='+prev_cute_votes+'></i></a>\
+                <span class="badge" id='+vid_id+'aww>' +cute_votes+'</span>\
+                <a class="btn-floating yellow" style="float:right;padding:3px;">\
+                <i class="em em-heart votes"  data-value ='+prev_pop_votes+'></i></a>\
+                <span class="badge" id='+vid_id+'yass>' +popular_votes+'</span></div>\
+                <div class="collapsible-body" style="border:solid; width:100%" ><iframe style="width:100%" height="415" src='+link +' frameborder="3" allowfullscreen> "</iframe>\
+                <span style="float:left; margin:1%">Description: '+description+'</span></div></li>'
+
+
+        }
+            collapsible+= '</ul>'
+            $('#vs').append(collapsible)
+            $('.collapsible').collapsible();
+
+}
+
+<!--update number of votes on the UI-->
+function updateVotes(result){
+    jsonResult = JSON.parse(result)
+    videoId = jsonResult["videoId"]
+    numVotes = jsonResult["numVotes"]
+    type = jsonResult["type"]
+    icon_id = '#'+videoId+type
+    console.log(icon_id)
+    console.log($(icon_id).text())
+    $(icon_id).text(numVotes)
+}
+});
+
+</script>
+</body>
+{% endblock %}
